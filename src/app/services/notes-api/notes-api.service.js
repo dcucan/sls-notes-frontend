@@ -13,6 +13,7 @@ export class NotesApiService {
             service: 'execute-api',
             region: 'eu-west-1',
             hostname: host.hostname,
+            path: path,
             method: method,
             body: body,
             headers: {
@@ -42,7 +43,7 @@ export class NotesApiService {
             }
         }
         catch (error) {
-            //do nothing
+            // do nothing
         }
     }
     addNote(item) {

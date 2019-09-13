@@ -11,29 +11,31 @@ declare const STAGE: string;
 @Injectable()
 export class NotesApiService {
     options;
-    constructor(private httpClient: HttpClient, private authService: AuthService) { }
+    constructor(private httpClient: HttpClient,
+        private authService: AuthService) {}
 
-    setOptions(path = '/', method = '', body ='') {
-        const host = new URL(API_ROOT)
+    setOptions(path = '/', method = '', body = '') {
+        const host = new URL(API_ROOT);
+
         let args = {
             service: 'execute-api',
             region: 'eu-west-1',
             hostname: host.hostname,
-            method:method,
+            path: path,
+            method: method,
             body: body,
             headers: {
-                'Content-Type':'application/json',
-                'Accept':'application/json'
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
             }
-        }
+        };
 
-        if(method == 'GET'){
+        if(method == 'GET') {
             delete args.body;
         }
 
-
         this.options = {};
-        try{
+        try {
             let savedCredsJson = this.authService.getCredentials();
 
             if(savedCredsJson) {
@@ -53,23 +55,22 @@ export class NotesApiService {
                 this.options.headers.app_user_id = savedCreds.IdentityId;
                 this.options.headers.app_user_name = savedCreds.user_name;
             }
-
-        }catch(error){
-            //do nothing
+        } catch (error) {
+            // do nothing
         }
     }
 
     addNote(item) {
         let path = STAGE + '/note';
         let endpoint = API_ROOT + path;
-
+        
         let itemData;
         itemData = {
             content: item.content,
             cat: item.cat
         };
 
-        if (item.title != "") {
+        if(item.title != "") {
             itemData.title = item.title;
         }
 
@@ -83,7 +84,7 @@ export class NotesApiService {
     updateNote(item) {
         let path = STAGE + '/note';
         let endpoint = API_ROOT + path;
-
+        
         let itemData;
         itemData = {
             content: item.content,
@@ -112,7 +113,7 @@ export class NotesApiService {
 
     getNotes(start?): Observable<any> {
         let path = STAGE + '/notes?limit=8';
-
+        
         if (start > 0) {
             path += '&start=' + start;
         }
