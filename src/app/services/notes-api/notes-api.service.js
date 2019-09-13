@@ -30,7 +30,7 @@ export class NotesApiService {
                 let savedCreds = JSON.parse(savedCredsJson);
                 let creds = {
                     accessKeyId: savedCreds.Credentials.AccessKeyId,
-                    secretAccessKey: savedCreds.Credentials.SecretAccessKey,
+                    secretAccessKey: savedCreds.Credentials.SecretKey,
                     sessionToken: savedCreds.Credentials.SessionToken,
                 };
                 let signer = new RequestSigner(args, creds);
