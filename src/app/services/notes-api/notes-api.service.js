@@ -31,7 +31,7 @@ export class NotesApiService {
                 let creds = {
                     accessKeyId: savedCreds.Credentials.AccessKeyId,
                     secretAccessKey: savedCreds.Credentials.SecretKey,
-                    sessionToken: savedCreds.Credentials.SessionToken,
+                    sessionToken: savedCreds.Credentials.SessionToken
                 };
                 let signer = new RequestSigner(args, creds);
                 let signed = signer.sign();
