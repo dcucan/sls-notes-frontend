@@ -1,16 +1,49 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { AuthService } from '../auth/auth.service';
+import { RequestSigner } from 'aws4';
 export class NotesApiService {
-    constructor(httpClient) {
+    constructor(httpClient, authService) {
         this.httpClient = httpClient;
+        this.authService = authService;
     }
-    setOptions() {
-        this.options = {
+    setOptions(path = '/', method = '', body = '') {
+        const host = new URL(API_ROOT);
+        let args = {
+            service: 'execute-api',
+            region: 'eu-west-1',
+            hostname: host.hostname,
+            method: method,
+            body: body,
             headers: {
-                app_user_id: 'test_user',
-                app_user_name: 'Test User'
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
             }
         };
+        if (method == 'GET') {
+            delete args.body;
+        }
+        this.options = {};
+        try {
+            let savedCredsJson = this.authService.getCredentials();
+            if (savedCredsJson) {
+                let savedCreds = JSON.parse(savedCredsJson);
+                let creds = {
+                    accessKeyId: savedCreds.Credentials.AccessKeyId,
+                    secretAccessKey: savedCreds.Credentials.SecretAccessKey,
+                    sessionToken: savedCreds.Credentials.SessionToken,
+                };
+                let signer = new RequestSigner(args, creds);
+                let signed = signer.sign();
+                this.options.headers = signed.headers;
+                delete this.options.headers.Host;
+                this.options.headers.app_user_id = savedCreds.IdentityId;
+                this.options.headers.app_user_name = savedCreds.user_name;
+            }
+        }
+        catch (error) {
+            //do nothing
+        }
     }
     addNote(item) {
         let path = STAGE + '/note';
@@ -26,7 +59,7 @@ export class NotesApiService {
         let reqBody = {
             Item: itemData
         };
-        this.setOptions();
+        this.setOptions(path, 'POST', JSON.stringify(reqBody));
         return this.httpClient.post(endpoint, reqBody, this.options);
     }
     updateNote(item) {
@@ -45,13 +78,13 @@ export class NotesApiService {
         let reqBody = {
             Item: itemData
         };
-        this.setOptions();
+        this.setOptions(path, 'PATCH', JSON.stringify(reqBody));
         return this.httpClient.patch(endpoint, reqBody, this.options);
     }
     deleteNote(timestamp) {
         let path = STAGE + '/note/t/' + timestamp;
         let endpoint = API_ROOT + path;
-        this.setOptions();
+        this.setOptions(path, 'DELETE');
         return this.httpClient.delete(endpoint, this.options);
     }
     getNotes(start) {
@@ -60,7 +93,7 @@ export class NotesApiService {
             path += '&start=' + start;
         }
         let endpoint = API_ROOT + path;
-        this.setOptions();
+        this.setOptions(path, 'GET');
         return this.httpClient.get(endpoint, this.options);
     }
 }
@@ -69,5 +102,6 @@ NotesApiService.decorators = [
 ];
 /** @nocollapse */
 NotesApiService.ctorParameters = () => [
-    { type: HttpClient }
+    { type: HttpClient },
+    { type: AuthService }
 ];
